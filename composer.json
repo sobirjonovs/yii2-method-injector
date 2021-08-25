@@ -1,0 +1,21 @@
+{
+    "name": "yii2/method-injector",
+    "description": "Write dependencies in method definition then see how the library injects them",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension"],
+    "license": "GPL-3.0+",
+    "authors": [
+        {
+            "name": "Sanjarbek Sobirjonov",
+            "email": "sobirjonovsdev@gmail.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "yii2\\dependency\\": "src/"
+        }
+    }
+}
