@@ -12,7 +12,7 @@ use yii\console\Exception;
 use yii\web\Application;
 
 /**
- * Add first to be injected classes followed by parameters
+ * MethodInjector trait
  * @package common\helpers
  */
 trait MethodInjector
@@ -27,7 +27,12 @@ trait MethodInjector
     {
         $methodName = "action" . ucfirst($id);
         $method = new ReflectionMethod($this, $methodName);
-        return parent::runAction($id, array_merge($this->inject($method->getParameters()), $params));
+        $injections = $this->inject($method->getParameters());
+        if ( isset($injections['parameters']) ) {
+            $params = array_fill_keys(array_keys($injections['parameter']), ...$params);
+        }
+        $params = isset($injections['injection']) ? $injections['injection'] + $params : $params;
+        return parent::runAction($id, $params);
     }
 
     /**
@@ -43,6 +48,8 @@ trait MethodInjector
                 if ($className !== ucfirst($className)) continue;
 
                 $this->setInvokable($invokables, $parameter, $dependency);
+            } else {
+                $this->setInvokable($invokables, $parameter);
             }
         }
         return $invokables;
@@ -53,14 +60,16 @@ trait MethodInjector
      * @param $parameter
      * @param $dependency
      */
-    private function setInvokable(array &$invokables, $parameter, $dependency)
+    private function setInvokable(array &$invokables, $parameter, $dependency = null)
     {
         $environment = current($this->getModules());
 
-        if ($environment instanceof Application) {
-            $invokables[$parameter->getName()] = new $dependency;
+        if ($dependency === null) {
+            $invokables['parameter'][$parameter->getPosition()] = $parameter->getName();
+        } elseif ($environment instanceof Application) {
+            $invokables['injection'][$parameter->getName()] = new $dependency;
         } else {
-            $invokables[] = new $dependency;
+            $invokables['injection'][$parameter->getPosition()] = new $dependency;
         }
     }
 }
