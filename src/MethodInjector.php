@@ -28,7 +28,7 @@ trait MethodInjector
         $methodName = "action" . ucfirst($id);
         $method = new ReflectionMethod($this, $methodName);
         $injections = $this->inject($method->getParameters());
-        if ( isset($injections['parameters']) ) {
+        if ( isset($injections['parameter']) ) {
             $params = array_fill_keys(array_keys($injections['parameter']), ...$params);
         }
         $params = isset($injections['injection']) ? $injections['injection'] + $params : $params;
