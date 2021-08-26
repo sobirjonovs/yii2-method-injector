@@ -8,6 +8,7 @@ use ReflectionException;
 use ReflectionMethod;
 use yii\base\Exception as WebException;
 use yii\base\InvalidRouteException;
+use yii\console\Application as ConsoleApplication;
 use yii\console\Exception;
 use yii\web\Application;
 
@@ -29,7 +30,7 @@ trait MethodInjector
         $method = new ReflectionMethod($this, $methodName);
         $injections = $this->inject($method->getParameters());
         if ( isset($injections['parameter']) ) {
-            $params = array_fill_keys(array_keys($injections['parameter']), ...$params);
+            $params = $this->positionParameters($injections['parameter'], $params);
         }
         $params = isset($injections['injection']) ? $injections['injection'] + $params : $params;
         return parent::runAction($id, $params);
@@ -65,11 +66,39 @@ trait MethodInjector
         $environment = current($this->getModules());
 
         if ($dependency === null) {
-            $invokables['parameter'][$parameter->getPosition()] = $parameter->getName();
+            if ($environment instanceof Application) {
+                $invokables['parameter'][$parameter->getName()] = $parameter->getDefaultValue();
+            } else {
+                $invokables['parameter'][$parameter->getPosition()] = $parameter->getName();
+            }
         } elseif ($environment instanceof Application) {
             $invokables['injection'][$parameter->getName()] = new $dependency;
         } else {
             $invokables['injection'][$parameter->getPosition()] = new $dependency;
         }
+    }
+
+    /**
+     * @param array $injecteds
+     * @param array $params
+     * @return array
+     */
+    public function positionParameters(array $injecteds, array $params): array
+    {
+        $environment = current($this->getModules());
+
+        if ($environment instanceof Application) {
+            $params = array_replace($injecteds, $params);
+        } elseif ($environment instanceof ConsoleApplication) {
+            $oldParams = $params;
+            $params = array_filter($params, function ($par) {
+                return !is_string($par);
+            }, ARRAY_FILTER_USE_KEY);
+            $params = array_pad($params, count($injecteds), null);
+            $params = array_combine(array_keys($injecteds), $params);
+            $params = array_replace($params, $oldParams);
+        }
+
+        return $params;
     }
 }
