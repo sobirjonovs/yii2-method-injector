@@ -45,7 +45,7 @@ trait MethodInjector
         $invokables = [];
         foreach ($parameters as $parameter) {
             if ($dependency = (string) $parameter->getType()) {
-                $className = substr(strrchr($dependency, "\\"), 1);
+                $className = substr(strrchr($dependency, "\\") ?: $dependency, 1);
                 if ($className !== ucfirst($className)) continue;
 
                 $this->setInvokable($invokables, $parameter, $dependency);
