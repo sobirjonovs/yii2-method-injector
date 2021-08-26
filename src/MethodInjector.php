@@ -67,7 +67,7 @@ trait MethodInjector
 
         if ($dependency === null) {
             if ($environment instanceof Application) {
-                $invokables['parameter'][$parameter->getName()] = $parameter->getDefaultValue();
+                $invokables['parameter'][$parameter->getName()] = $parameter->isOptional() ? $parameter->getDefaultValue() : null;
             } else {
                 $invokables['parameter'][$parameter->getPosition()] = $parameter->getName();
             }
