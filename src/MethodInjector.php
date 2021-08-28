@@ -26,7 +26,7 @@ trait MethodInjector
      */
     public function runAction($id, $params = [])
     {
-        $methodName = "action" . ucfirst($id);
+        $methodName = "action" . ucfirst($id ?: "index");
         $method = new ReflectionMethod($this, $methodName);
         $injections = $this->inject($method->getParameters());
         if ( isset($injections['parameter']) ) {
