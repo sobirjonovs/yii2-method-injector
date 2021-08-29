@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\dependency;
 
+use common\helpers\Str;
 use ReflectionException;
 use ReflectionMethod;
 use yii\base\Exception as WebException;
@@ -26,7 +27,7 @@ trait MethodInjector
      */
     public function runAction($id, $params = [])
     {
-        $methodName = "action" . ucfirst($id ?: "index");
+        $methodName = $this->transformMethod($id);
         $method = new ReflectionMethod($this, $methodName);
         $injections = $this->inject($method->getParameters());
         if ( isset($injections['parameter']) ) {
@@ -83,7 +84,7 @@ trait MethodInjector
      * @param array $params
      * @return array
      */
-    public function positionParameters(array $injecteds, array $params): array
+    private function positionParameters(array $injecteds, array $params): array
     {
         $environment = current($this->getModules());
 
@@ -100,5 +101,19 @@ trait MethodInjector
         }
 
         return $params;
+    }
+
+    /**
+     * @param string $name
+     * @return string
+     */
+    private function transformMethod(string $name): string
+    {
+        if (empty($name)) {
+            return "actionIndex";
+        }
+        $splitName = explode("-", $name);
+        $capitalizeEveryElement = array_map('ucfirst', $splitName);
+        return "action" . implode("", $capitalizeEveryElement);
     }
 }
