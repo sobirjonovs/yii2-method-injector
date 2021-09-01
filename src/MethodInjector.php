@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace yii2\dependency;
 
-use common\helpers\Str;
-use common\services\UserService;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
+use Throwable;
 use yii\base\Exception as WebException;
 use yii\base\InvalidRouteException;
 use yii\console\Application as ConsoleApplication;
@@ -128,12 +127,14 @@ trait MethodInjector
         $class = new ReflectionClass($this);
 
         foreach ($class->getProperties() as $property) {
-            if (strcasecmp($class->getName(), $property->class) == false) {
-                if (strrchr((string)$property->getType(), "\\")) {
-                    $type = (string) $property->getType();
-                    $this->{$property->getName()} = new $type;
+            try {
+                if (strcasecmp($class->getName(), $property->class) == false) {
+                    if (strrchr((string)$property->getType(), "\\")) {
+                        $type = (string) $property->getType();
+                        $this->{$property->getName()} = new $type;
+                    }
                 }
-            }
+            } catch (Throwable | \Exception $exception) {}
         }
     }
 }
