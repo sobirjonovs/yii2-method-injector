@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace yii2\dependency;
 
 use common\helpers\Str;
+use common\services\UserService;
+use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
 use yii\base\Exception as WebException;
@@ -34,6 +36,7 @@ trait MethodInjector
             $params = $this->positionParameters($injections['parameter'], $params);
         }
         $params = isset($injections['injection']) ? $injections['injection'] + $params : $params;
+        $this->properties();
         return parent::runAction($id, $params);
     }
 
@@ -115,5 +118,22 @@ trait MethodInjector
         $splitName = explode("-", $name);
         $capitalizeEveryElement = array_map('ucfirst', $splitName);
         return "action" . implode("", $capitalizeEveryElement);
+    }
+
+    /**
+     * Injects dependent properties
+     */
+    private function properties()
+    {
+        $class = new ReflectionClass($this);
+
+        foreach ($class->getProperties() as $property) {
+            if (strcasecmp($class->getName(), $property->class) == false) {
+                if (strrchr((string)$property->getType(), "\\")) {
+                    $type = (string) $property->getType();
+                    $this->{$property->getName()} = new $type;
+                }
+            }
+        }
     }
 }
